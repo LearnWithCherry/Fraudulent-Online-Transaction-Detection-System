@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+      
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tranch.ML | Intelligent Transaction Risk Engine</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@700;800&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* CENTER BOTH CIRCLES IN CARD */
+
+
+        :root {
+            /* Primary Accents from Index */
+            --accent: #a8ff78;
+            /* Neon Lime */
+            --accent-glow: rgba(168, 255, 120, 0.3);
+
+            /* Semantic Colors */
+            --danger: #ff2d55;
+            /* Keep red for risk */
+            --warning: #ffb800;
+            --success: #a8ff78;
+            /* Use lime for success too */
+
+            /* The Purple Shade Backgrounds */
+            --bg: #312450;
+            /* Deep Purple Base */
+            --bg-darker: #2c2146;
+            /* Darker Purple for sections */
+            --glass: rgba(49, 36, 80, 0.85);
+
+            /* Borders & Text */
+            --border: rgba(168, 255, 120, 0.15);
+            --text: #e2e8f0;
+        }
+
+        /* RESET */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* BODY */
+        body {
+            background-color: #312450;
+            background-image: linear-gradient(45deg, #312450 0%, #4e3681 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* If you have card-like containers in detect.html, use this glass effect */
+        body {
+            font-family: 'Inter', sans-serif;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 25px;
+            line-height: 1.6;
+        }
+
+        .card,
+        .container {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* CONTAINER */
+        .container {
+            width: 100%;
+            max-width: 1350px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 25px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 35px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        /* LOGO */
+        .logo-area h1 {
+            font-family: 'Syne';
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--accent);
+            letter-spacing: 2px;
+        }
+
+        /* FORM */
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            font-family: 'JetBrains Mono';
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1px;
+        }
+
+        input,
+        select {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            padding: 12px 14px;
+            border-radius: 10px;
+            color: white;
+            font-size: 0.95rem;
+            outline: none;
+            transition: 0.25s ease;
+        }
+
+        input:focus,
+        select:focus {
+            border-color: var(--accent);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 0 0 2px rgba(0, 242, 255, 0.15);
+        }
+
+        /* BUTTON */
+        .btn-analyze {
+            width: 100%;
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 16px;
+            border-radius: 10px;
+            font-family: 'Syne';
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.25s ease;
+            letter-spacing: 1px;
+        }
+
+        .btn-analyze:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.3);
+        }
+
+        /* DASHBOARD */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        /* CARD */
+        .card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 28px;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* IDLE OVERLAY FIX */
+        .idle-overlay {
+            position: absolute;
+            top: 25%;
+            left: 65%;
+            transform: translate(-50%, -50%);
+
+            width: 100%;
+            max-width: 600px;
+            height: 500px;
+
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            /* Changed from black to your Purple Glass theme */
+            background: var(--glass);
+            border: 1px dashed var(--accent);
+            /* Changed border color to lime for better pop */
+            border-radius: 24px;
+
+            text-align: center;
+            backdrop-filter: blur(20px);
+            z-index: 100;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .idle-overlay h2 {
+            font-family: 'Syne';
+            font-size: 1.6rem;
+            letter-spacing: 3px;
+        }
+
+        .idle-overlay p {
+            font-size: 0.85rem;
+            opacity: 0.6;
+            margin-top: 10px;
+        }
+
+        /* CARD HEADER */
+        .card-header {
+            font-family: 'JetBrains Mono';
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .card-header::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+
+
+        /* TABLE */
+        .intel-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono';
+            font-size: 0.8rem;
+        }
+
+        .intel-table th {
+            padding: 10px;
+            opacity: 0.5;
+        }
+
+        .intel-table td {
+            padding: 12px 10px;
+        }
+
+        /* RISK */
+        .risk-value {
+            font-family: 'Syne';
+            font-size: 4rem;
+            text-align: center;
+            letter-spacing: 2px;
+            margin-top: 10px;
+        }
+
+        #risk-status {
+            text-align: center;
+            font-size: 0.75rem;
+            margin-top: 6px;
+        }
+
+        /* METRICS */
+        .accuracy-metrics {
+            display: flex;
+            gap: 15px;
+        }
+
+        .metric-box {
+            flex: 1;
+            text-align: center;
+            padding: 18px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+        }
+
+        .metric-val {
+            font-family: 'JetBrains Mono';
+            font-size: 1.7rem;
+            color: var(--accent);
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            opacity: 0.5;
+            margin-top: 6px;
+        }
+
+        /* =========================
+   FULL HEIGHT + SCROLL FIX
+========================= */
+        /* =========================
+   AUDIT CARD (HEIGHT FIX)
+========================= */
+
+        .audit-card {
+            max-height: 240px;
+            /* 🔥 control box size */
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* =========================
+   AUDIT CONTAINER
+========================= */
+
+        #audit-container {
+            font-family: 'Inter', sans-serif !important;
+            font-size: 0.78rem;
+            line-height: 1.3;
+            /* ❌ DO NOT CHANGE */
+
+            display: block !important;
+
+            flex: 1;
+            /* fill remaining space */
+            overflow-y: auto;
+            /* scroll inside */
+            overflow-x: hidden;
+
+            word-spacing: 1px;
+            /* horizontal spacing only */
+        }
+
+        /* =========================
+   INLINE PARAGRAPH STYLE
+========================= */
+
+        #audit-container>div {
+            display: inline;
+        }
+
+        /* LABEL */
+        #audit-container>div>*:first-child {
+            color: rgba(0, 242, 255, 0.75);
+        }
+
+        /* VALUE */
+        #audit-container>div>*:last-child {
+            color: var(--accent);
+            font-family: 'JetBrains Mono';
+            font-size: 0.75rem;
+        }
+
+        /* SEPARATOR */
+        #audit-container>div::after {
+            content: ". ";
+            opacity: 0.35;
+        }
+
+        /* REMOVE BOLD */
+        #audit-container * {
+            font-weight: 400 !important;
+        }
+
+        /* =========================
+   CONFUSION MATRIX (CLEAN GRID)
+========================= */
+        /* =========================
+   CONFUSION MATRIX (FINAL CLEAN)
+========================= */
+
+        /* GRID CONTAINER */
+        #matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            /* 2 columns */
+            justify-content: center;
+            align-items: center;
+
+            gap: 14px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* =========================
+   TOP LABELS (Predicted)
+========================= */
+
+        .matrix-label.top {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            font-family: 'JetBrains Mono';
+        }
+
+        /* =========================
+   BOTTOM LABELS (Actual)
+========================= */
+
+        .matrix-label.bottom {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            font-family: 'JetBrains Mono';
+            margin-top: 6px;
+        }
+
+        /* =========================
+   MATRIX BOXES
+========================= */
+
+        .matrix-cell {
+            width: 140px;
+            /* fixed size (bigger box) */
+            height: 120px;
+
+            margin: 0 auto;
+            /* center inside grid */
+
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            text-align: center;
+            transition: 0.25s;
+        }
+
+        /* VALUE */
+        .matrix-cell .value {
+            font-size: 1.8rem;
+            font-family: 'JetBrains Mono';
+        }
+
+        /* LABEL INSIDE BOX */
+        .matrix-cell .label {
+            font-size: 0.65rem;
+            opacity: 0.5;
+            margin-top: 6px;
+        }
+
+        /* =========================
+   HOVER EFFECT
+========================= */
+
+        .matrix-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.2);
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            border-radius: 15px;
+            background: #e5e3df;
+            /* Classic map off-white background */
+            border: 2px solid var(--border);
+
+            /* VIBRANT GREEN FILTER: 
+       saturate(1.4) makes the foliage deep green.
+       hue-rotate(-10deg) shifts the yellows to lush greens. */
+            filter: saturate(1.4) contrast(1.1) brightness(1.0) hue-rotate(-10deg);
+
+            /* Ensures the map is on top of the purple bleed */
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Optional: Darken the map just a tiny bit so it doesn't look too "bright" 
+   against your dark purple dashboard */
+        #map::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* UTIL */
+        .hidden {
+            display: none;
+        }
+
+
+        /* RESPONSIVE */
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* RISK CARD CENTER */
+        .risk-card {
+            text-align: center;
+        }
+
+        /* CIRCLE CONTAINER */
+        .risk-circle {
+            width: 160px;
+            height: 160px;
+            margin: 20px auto;
+            border-radius: 50%;
+            position: relative;
+
+            /* glowing ring */
+            background: conic-gradient(var(--accent) 0%,
+                    var(--accent) 70%,
+                    rgba(255, 255, 255, 0.05) 70%);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.25);
+        }
+
+        /* INNER CIRCLE */
+        .risk-circle::before {
+            content: '';
+            position: absolute;
+            width: 125px;
+            height: 125px;
+            background: var(--bg);
+            border-radius: 50%;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
+        }
+
+        /* INNER CONTENT */
+        .risk-inner {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+        }
+
+        /* SCORE */
+        .risk-value {
+            font-family: 'Syne';
+            font-size: 2.5rem;
+            letter-spacing: 2px;
+        }
+
+        /* LABEL */
+        .risk-label {
+            font-size: 0.6rem;
+            opacity: 0.5;
+            letter-spacing: 2px;
+        }
+
+        /* STATUS */
+        .risk-status {
+            text-align: center;
+            font-family: 'JetBrains Mono';
+            font-size: 0.7rem;
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+
+        /* CENTER BOTH CIRCLES IN CARD */
+        .neural-circles {
+            display: flex;
+            justify-content: center;
+            /* centers horizontally */
+            align-items: center;
+            gap: 30px;
+            /* space between circles */
+            margin-top: 20px;
+        }
+
+        /* WRAPPER */
+        .circle-wrapper {
+            text-align: center;
+        }
+
+        /* SMALL CIRCLE */
+        /* BIGGER CIRCLE */
+        .mini-circle {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: conic-gradient(var(--accent) 0%,
+                    var(--accent) 60%,
+                    rgba(255, 255, 255, 0.05) 60%);
+
+            box-shadow: 0 0 18px rgba(0, 242, 255, 0.25);
+        }
+
+        /* INNER CUT (PERFECT CENTER) */
+        .mini-circle::before {
+            content: '';
+            position: absolute;
+            width: 105px;
+            height: 105px;
+            background: var(--bg);
+            border-radius: 50%;
+        }
+
+        /* PERFECT CENTER FIX */
+        .circle-inner {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+
+            inset: 0;
+            /* MAGIC: centers perfectly */
+        }
+
+        /* VALUE FIX */
+        .metric-val {
+            font-family: 'Syne';
+            font-size: 1.6rem;
+            line-height: 1;
+            /* prevents vertical shift */
+        }
+
+        /* LABEL */
+        .metric-label {
+            font-size: 0.65rem;
+            opacity: 0.5;
+            margin-top: 4px;
+        }
+
+        /* GRID STRUCTURE */
+        /* CARD SIZE (balanced, not too small) */
+        /* KEEP CARD SAME AS OTHERS */
+        .matrix-card {
+            width: 100%;
+            /* follow grid */
+            padding: 24px;
+        }
+
+        /* KEEP CARD SAME — ONLY INNER CHANGE */
+
+        /* =========================
+   CONFUSION MATRIX
+========================= */
+
+        .matrix-card {
+            width: 100%;
+            padding: 24px;
+        }
+
+        /* GRID */
+        #matrix-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            justify-content: center;
+            align-items: center;
+
+            gap: 14px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        /* TOP LABELS */
+        .matrix-label.top {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            font-family: 'JetBrains Mono';
+        }
+
+        /* BOTTOM LABELS */
+        .matrix-label.bottom {
+            font-size: 0.7rem;
+            opacity: 0.6;
+            font-family: 'JetBrains Mono';
+            margin-top: 6px;
+        }
+
+        /* MATRIX BOX */
+        .matrix-cell {
+            width: 140px;
+            height: 120px;
+            margin: 0 auto;
+
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+
+            transition: 0.25s;
+        }
+
+        /* VALUE */
+        .matrix-cell .value {
+            font-size: 1.8rem;
+            font-family: 'JetBrains Mono';
+        }
+
+        /* LABEL */
+        .matrix-cell .label {
+            font-size: 0.65rem;
+            opacity: 0.5;
+            margin-top: 6px;
+        }
+
+        /* HOVER */
+        .matrix-cell:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(0, 242, 255, 0.2);
+        }
+
+        /* =========================
+   LOG CARD STRUCTURE
+========================= */
+
+        .log-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            /* match other cards */
+        }
+
+        /* HEADER */
+        .log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* STATUS */
+        .log-status {
+            font-size: 0.55rem;
+            color: var(--success);
+            letter-spacing: 1px;
+            animation: pulse 2s infinite;
+        }
+
+        /* =========================
+   LOG CONTAINER
+========================= */
+
+        .log-container {
+            flex: 1;
+            /* 🔥 fill full height */
+            overflow-y: auto;
+            padding: 10px;
+            border-radius: 10px;
+
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        /* EMPTY STATE CENTER */
+        .log-empty {
+            text-align: center;
+            opacity: 0.3;
+            letter-spacing: 2px;
+            font-size: 0.6rem;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        /* =========================
+   LOG ENTRY (when data comes)
+========================= */
+
+        .log-entry {
+            font-family: 'JetBrains Mono';
+            font-size: 0.7rem;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            opacity: 0.8;
+        }
+
+        /* =========================
+   SCROLLBAR (OPTIONAL)
+========================= */
+
+        .log-container::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .log-container::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        #map {
+            background: #0b0f15;
+            /* softer dark (not pitch black) */
+        }
+
+        /* =========================
+   PULSE ANIMATION
+========================= */
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        /* =========================
+   INTEL TABLE ALIGN FIX
+========================= */
+        /* =========================
+   USAGE GUIDE PANEL
+========================= */
+
+
+        .usage-guide {
+            margin-top: 20px;
+            padding: 12px;
+
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+
+            font-family: 'JetBrains Mono';
+            font-size: 0.6rem;
+            line-height: 1.4;
+
+            display: flex;
+            flex-direction: column;
+
+            height: 250px;
+            /* 🔥 GIVE SPACE (VERY IMPORTANT) */
+        }
+
+        /* TITLE */
+        .guide-title {
+            color: var(--accent);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* STEPS */
+        .guide-step {
+            opacity: 0.7;
+            margin-bottom: 6px;
+        }
+
+        /* HIGHLIGHT */
+        .guide-step span {
+            color: var(--accent);
+        }
+
+        /* EXAMPLE */
+        .guide-example {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border);
+            opacity: 0.8;
+        }
+
+        .intel-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            /* 🔥 keeps columns equal */
+            font-family: 'JetBrains Mono';
+            font-size: 0.8rem;
+        }
+
+        /* HEADER */
+        .intel-table th {
+            text-align: left;
+            /* 🔥 same as data */
+            padding: 12px 10px;
+            opacity: 0.5;
+        }
+
+        /* DATA */
+        .intel-table td {
+            text-align: left;
+            /* 🔥 match header */
+            padding: 12px 10px;
+        }
+
+        /* IMPROVE PARAGRAPH FLOW (NO SIZE CHANGE) */
+        #audit-container {
+            line-height: 1.5;
+            /* 🔥 better readability */
+        }
+
+        /* ADD CLEAN WORD SPACING BETWEEN ITEMS */
+        #audit-container>div {
+            margin-right: 4px;
+            /* small gap between sentences */
+        }
+
+        /* SOFT SEPARATION DOT */
+        #audit-container>div::after {
+            content: ". ";
+            opacity: 0.4;
+            /* softer than before */
+        }
+
+        /* FIX EACH COLUMN ALIGNMENT */
+        .intel-table th:nth-child(1),
+        .intel-table td:nth-child(1) {
+            text-align: left;
+        }
+
+        .intel-table th:nth-child(2),
+        .intel-table td:nth-child(2),
+        .intel-table th:nth-child(3),
+        .intel-table td:nth-child(3) {
+            text-align: center;
+            /* numbers center */
+        }
+
+        .intel-table th:nth-child(4),
+        .intel-table td:nth-child(4) {
+            text-align: center;
+        }
+
+        .intel-table th:nth-child(5),
+        .intel-table td:nth-child(5) {
+            text-align: right;
+            /* origin right aligned */
+        }
+
+        /* ROW STYLE */
+        .intel-table tbody tr {
+            border-top: 1px solid var(--border);
+        }
+
+        /* =========================
+   SIDEBAR FIX (IMPORTANT)
+========================= */
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        /* =========================
+   USAGE GUIDE (NORMAL BLOCK)
+========================= */
+
+        .usage-guide {
+            margin-top: 20px;
+            padding: 12px;
+
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+
+            font-family: 'JetBrains Mono';
+            font-size: 0.6rem;
+            line-height: 1.4;
+        }
+
+        /* =========================
+   ANIMATION (OUTSIDE VERSION)
+========================= */
+
+        .neural-anim {
+            margin-top: 12px;
+
+            flex: 1;
+            /* 🔥 take remaining space */
+            min-height: 150px;
+            /* 🔥 visible base */
+
+            position: relative;
+            overflow: hidden;
+
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+        }
+
+        /* =========================
+   SCAN LINES (FULL HEIGHT)
+========================= */
+        /* =========================
+   FIXED SCAN LINES (VISIBLE)
+========================= */
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+
+            background: linear-gradient(90deg,
+                    transparent,
+                    var(--accent),
+                    transparent);
+
+            opacity: 0.9;
+
+            top: -20px;
+            /* start above */
+            animation: scanDown 2.5s linear infinite;
+        }
+
+        .delay1 {
+            animation-delay: 0.8s;
+        }
+
+        .delay2 {
+            animation-delay: 1.6s;
+        }
+
+        /* 🔥 IMPORTANT FIX */
+        @keyframes scanDown {
+            0% {
+                top: -20px;
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                /* 🔥 NOW relative to container */
+                opacity: 0;
+            }
+        }
+
+        /* =========================
+   SCAN DOT
+========================= */
+        .scan-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+
+            background: var(--accent);
+            border-radius: 50%;
+
+            left: 50%;
+            transform: translateX(-50%);
+
+            box-shadow: 0 0 10px var(--accent);
+
+            top: -10px;
+            animation: moveDown 2.5s linear infinite;
+        }
+
+        @keyframes moveDown {
+            0% {
+                top: -10px;
+                opacity: 0;
+            }
+
+            20% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                /* 🔥 container-based movement */
+                opacity: 0;
+            }
+        }
+
+        /* =========================
+   TRANSACTION PARTICLES
+========================= */
+
+        .tx-particles {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* BALL */
+        .tx-ball {
+            position: absolute;
+
+            width: 8px;
+            height: 8px;
+
+            background: var(--accent);
+            border-radius: 50%;
+
+            box-shadow: 0 0 8px var(--accent);
+
+            left: 50%;
+            transform: translateX(-50%);
+
+            animation: txMove 3s linear forwards;
+        }
+
+        /* TEXT */
+        .tx-label {
+            position: absolute;
+            left: 60%;
+            font-size: 0.55rem;
+            font-family: 'JetBrains Mono';
+
+            color: var(--accent);
+            opacity: 0.8;
+
+            animation: txMove 3s linear forwards;
+        }
+
+        /* MOVEMENT */
+        @keyframes txMove {
+            0% {
+                top: -10px;
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+            }
+
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+        /* --- TRANCH.ML SIDEBAR LOGO (COMPACT VERSION) --- */
+.hero-title-container {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 1.5rem; /* Reduced margin for compact sidebar */
+}
+/* FIX COUNTRY DROPDOWN COLORS */
+select option {
+    background-color: #2c2146;   /* dark purple */
+    color: #e2e8f0;              /* light text */
+}
+
+/* When option is selected */
+select option:checked {
+    background-color: #a8ff78;   /* neon accent */
+    color: #000;
+}
+/* Smooth press + premium feel */
+select {
+    border-radius: 12px;
+    transition: all 0.25s ease;
+    cursor: pointer;
+}
+
+/* Click animation */
+select:active {
+    transform: scale(0.97);
+}
+
+/* Focus glow (gives illusion of smooth open) */
+select:focus {
+    box-shadow: 0 0 18px rgba(168, 255, 120, 0.3);
+    border-color: var(--accent);
+}
+
+/* Dropdown colors */
+select option {
+    background: #2c2146;
+    color: #e2e8f0;
+}
+
+/* Optgroup label color */
+select optgroup {
+    background-color: #312450;
+    color: #a8ff78;
+}
+.logo-area h1 {
+    font-family: 'Syne', sans-serif !important;
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 1.4rem;  /* Shrunk from 2.2rem to fit sidebar better */
+    letter-spacing: 1px;
+    margin: 0;
+    color: #ffffff;
+}
+
+/* THE NODES (Scaled down for smaller text) */
+.node {
+    position: absolute;
+    width: 6px;         /* Shrunk from 10px */
+    height: 6px;        /* Shrunk from 10px */
+    background: #a8ff78;
+    border-radius: 1px;
+    box-shadow: 0 0 10px #a8ff78, 0 0 20px rgba(168, 255, 120, 0.4);
+    animation: flow 3s infinite ease-in-out;
+    z-index: 10;
+}
+
+/* Tighter offsets for the smaller font */
+.node-right-top { 
+    top: -6px; 
+    right: -12px; 
+    animation-delay: 0s; 
+}
+
+.node-left-bottom { 
+    bottom: -4px; 
+    left: -15px; 
+    animation-delay: 1.5s; 
+}
+
+/* SAME CORE PULSE ANIMATION */
+@keyframes flow {
+    0%, 100% { 
+        transform: scale(1); 
+        opacity: 0.4; 
+    }
+    50% { 
+        transform: scale(1.6); /* Slightly less scale-up to prevent overlap */
+        opacity: 1; 
+    }
+}
+    </style>
+</head>
+
+<body>
+<audio id="siren-audio" src="https://www.soundjay.com/misc/sounds/siren.wav" preload="auto"></audio>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo-area">
+                <div class="hero-title-container">
+                    <div class="node node-right-top"></div>
+                    <h1>Tranch<span style="color: #a8ff78;">.ML</span></h1>
+                    <div class="node node-left-bottom"></div>
+                </div>
+            </div>
+            <div class="form-group"><label>Account ID</label><input type="text" id="acc_num" placeholder="ACC-8821-X">
+            </div>
+            <div class="form-group"><label>Amount (INR)</label><input type="number" id="amount" placeholder="50000">
+            </div>
+            <div class="form-group"><label>TX Velocity</label><input type="number" id="frequency"
+                    placeholder="Attempts per cycle"></div>
+            <div class="form-group"><label>Geofence Offset (KM)</label><input type="number" id="distance"
+                    placeholder="Distance from Home"></div>
+            <div class="form-group">
+                <label>Origin Node</label>
+                <select id="country">
+                    <optgroup label="Domestic">
+                        <option value="India" data-lat="20.5937" data-lng="78.9629">India (Mumbai Core)</option>
+                    </optgroup>
+                    <optgroup label="International">
+                        <option value="USA" data-lat="37.0902" data-lng="-95.7129">United States</option>
+                        <option value="UK" data-lat="55.3781" data-lng="-3.4360">United Kingdom</option>
+                        <option value="Singapore" data-lat="1.3521" data-lng="103.8198">Singapore</option>
+                        <option value="UAE" data-lat="23.4241" data-lng="53.8478">United Arab Emirates</option>
+                        <option value="Germany" data-lat="51.1657" data-lng="10.4515">Germany</option>
+                    </optgroup>
+                </select>
+            </div>
+            <button class="btn-analyze" onclick="runDiagnostics()">Execute Neural Scan</button>
+
+            <div style="margin-top: 30px; border-top: 1px solid var(--border); padding-top: 20px;">
+
+                <label>Neural Blacklist</label>
+                <div id="blacklist-view"
+                    style="font-family:'JetBrains Mono'; font-size:0.6rem; color:var(--danger); margin-top:10px;">
+                    None Active
+                </div>
+
+                <!-- 🔥 HOW TO USE -->
+                <div class="usage-guide">
+
+                    <div class="guide-title">HOW TO USE MODEL</div>
+
+                    <div class="guide-step">
+                        1. Enter <span>Account ID</span> (e.g. ACC-8821-X)
+                    </div>
+
+                    <div class="guide-step">
+                        2. Add <span>Amount</span> → try normal (₹500) or high (₹50000)
+                    </div>
+
+                    <div class="guide-step">
+                        3. Set <span>Velocity</span> → higher = more suspicious
+                    </div>
+
+                    <div class="guide-step">
+                        4. Add <span>Distance</span> → &gt;500km triggers anomaly
+                    </div>
+
+                    <div class="guide-step">
+                        5. Select <span>Origin Node</span> (India / USA / etc.)
+                    </div>
+
+                    <div class="guide-step">
+                        6. Click <span>Execute Neural Scan</span>
+                    </div>
+
+                    <div class="guide-example">
+                        ▶ Example:
+                        ₹500 + 5km → SAFE
+                        ₹50000 + 1200km → FRAUD ⚠
+                    </div>
+                </div>
+            </div>
+            <div class="neural-anim">
+
+                <div class="scan-line"></div>
+                <div class="scan-line delay1"></div>
+                <div class="scan-line delay2"></div>
+                <div class="tx-particles"></div>
+                <div class="scan-dot"></div>
+
+            </div>
+        </aside>
+
+        <main class="dashboard-grid">
+            <div class="idle-overlay" id="idle-view">
+                <h2 style="font-family: 'Syne'; color: var(--accent); letter-spacing: 4px;">ENGINE STANDBY</h2>
+                <p style="opacity: 0.5; font-size: 0.7rem; margin-top: 10px;">Neural Network Ready. Input Transaction
+                    Data.</p>
+            </div>
+            <div class="card hidden results">
+                <div class="card-header">Model Performance Metrics (ML Proof)</div>
+                <div style="height: 300px;">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card hidden results" style="height: 370px; padding: 15px;">
+                <div class="card-header">Geo-Spatial Neural Trace</div>
+                <div id="map" style="height: 300px;"></div>
+            </div>
+
+
+            <div class="card hidden results risk-card">
+                <div class="card-header">Calculated Risk Index</div>
+
+                <div class="risk-circle">
+                    <div class="risk-inner">
+                        <div class="risk-value" id="risk-score">00</div>
+                        <div class="risk-label">RISK</div>
+                    </div>
+                </div>
+
+                <div id="risk-status" class="risk-status">
+                    CALCULATING
+                </div>
+            </div>
+            <div class="card hidden results neural-card">
+                <div class="card-header">Neural Integrity</div>
+
+                <div class="neural-circles">
+
+                    <!-- Precision -->
+                    <div class="circle-wrapper">
+                        <div class="mini-circle precision-circle">
+                            <div class="circle-inner">
+                                <div class="metric-val" id="acc-score">--%</div>
+                                <div class="metric-label">Precision</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Confidence -->
+                    <div class="circle-wrapper">
+                        <div class="mini-circle confidence-circle">
+                            <div class="circle-inner">
+                                <div class="metric-val" id="confidence-val">--%</div>
+                                <div class="metric-label">Confidence</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="card hidden results matrix-card">
+                <div class="card-header">Confusion Matrix</div>
+
+                <!-- 🔥 Dynamic container -->
+                <div id="matrix-grid" class="confusion-matrix"></div>
+            </div>
+            <div class="card hidden results">
+                <div class="card-header">Neural Decision Logic (Feature Weights)</div>
+                <div id="audit-container" style="display: flex; flex-direction: column; gap: 12px;">
+                </div>
+                <div
+                    style="margin-top: 15px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 0.6rem; opacity: 0.5; font-family: 'JetBrains Mono';">
+                    * SHAP Values calculated via Random Forest Leaf nodes.
+                </div>
+            </div>
+            <div class="card full-width hidden results">
+                <div class="card-header">User Historical Intelligence</div>
+                <table class="intel-table">
+                    <thead>
+                        <tr>
+                            <th>ACCOUNT ID</th>
+                            <th>AVG SPEND</th>
+
+                            <th>TRUST SCORE</th>
+                            <th>ORIGIN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="intel-body"></tbody>
+                </table>
+            </div>
+
+
+    </div>
+    </main>
+    </div>
+
+    <script>
+        /* =========================
+   RANDOM TRANSACTION FLOW
+========================= */
+
+        function generateTxID() {
+            return "TX-" + Math.floor(Math.random() * 90000 + 10000);
+        }
+
+        function spawnTransaction() {
+            const container = document.querySelector('.tx-particles');
+            if (!container) return;
+
+            const ball = document.createElement('div');
+            ball.className = 'tx-ball';
+
+            const label = document.createElement('div');
+            label.className = 'tx-label';
+            label.innerText = generateTxID();
+
+            // random horizontal variation
+            const offset = (Math.random() - 0.5) * 40;
+            ball.style.left = `calc(50% + ${offset}px)`;
+            label.style.left = `calc(55% + ${offset}px)`;
+
+            container.appendChild(ball);
+            container.appendChild(label);
+
+            // remove after animation
+            setTimeout(() => {
+                ball.remove();
+                label.remove();
+            }, 3000);
+        }
+
+        /* LOOP */
+        setInterval(spawnTransaction, 1200);
+        let map, markerGroup;
+        const blacklist = new Set();
+
+        window.onload = async () => {
+
+            /* =========================
+               INIT MAP (FAST + DARK)
+            ========================== */
+
+            /* --- FIXED MAP INITIALIZATION --- */
+            map = L.map('map', {
+                zoomControl: false,
+                preferCanvas: true,
+                attributionControl: false // Cleans up the UI
+            }).setView([20.5937, 78.9629], 2);
+
+            /* --- REAL SATELLITE MAP TILES --- */
+            /* --- APPLE MAPS STYLE VIBRANT GREEN TILES --- */
+            /* --- GOOGLE TERRAIN TILES (NATURAL GREENS) --- */
+            L.tileLayer('https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: 'Map data &copy; Google'
+            }).addTo(map);
+
+            /* --- REMOVE PREVIOUS PURPLE FILTERS --- */
+            document.getElementById('map').style.filter = "saturate(1.4) contrast(1.1) brightness(1.0) hue-rotate(-10deg)";
+
+            /* --- CSS FILTER FOR THE PURPLE SHADE --- */
+            const mapEl = document.getElementById('map');
+            mapEl.style.filter = "hue-rotate(245deg) invert(100%) contrast(90%) brightness(120%) saturate(0.5) opacity(0.7)";
+            mapEl.style.background = "#312450"; // Forces the purple background to bleed through
+
+            markerGroup = L.layerGroup().addTo(map);
+
+            /* --- CRITICAL: FORCE MAP TO RESIZE --- */
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 500);
+
+            /* =========================
+               LOAD ML PROOFS
+            ========================== */
+
+            try {
+                const proofRes = await fetch('http://127.0.0.1:5001/ml_proofs.json');
+                const proofs = await proofRes.json();
+
+                renderModelProofChart(proofs);
+
+                if (proofs.confusion_matrix) {
+                    renderConfusionMatrix(proofs.confusion_matrix);
+                }
+
+            } catch (e) {
+                console.error("Neural Link Error: Could not load ML Proofs.", e);
+            }
+        };
+        const getTime = () => new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+       async function runDiagnostics() {
+    const countryEl = document.getElementById('country');
+    const selectedCountry = countryEl.options[countryEl.selectedIndex];
+
+    const payload = {
+        acc: document.getElementById('acc_num').value || "AC-TEST",
+        amt: document.getElementById('amount').value,
+        freq: document.getElementById('frequency').value,
+        dist: document.getElementById('distance').value,
+        origin: countryEl.value
+    };
+
+    // 1. NEURAL BLACKLIST ENFORCEMENT
+    if (typeof blacklist !== 'undefined' && blacklist.has(payload.acc)) {
+        alert(`CRITICAL ACCESS REJECTED: Account ${payload.acc} is currently blacklisted.`);
+        const logStream = document.getElementById('log-stream');
+        if (logStream) {
+            const alertEntry = `
+                <div class="log-entry" style="border-left: 2px solid var(--danger); background: rgba(255, 45, 85, 0.05);">
+                    <div class="log-meta"><span>UNAUTHORIZED_ACCESS_ATTEMPT</span><span>${getTime()}</span></div>
+                    <div class="log-data">
+                        <span style="color: var(--danger)">BLOCK_HIT: ${payload.acc}</span>
+                        <span class="status-tag" style="background: var(--danger); color: #fff">REJECTED</span>
+                    </div>
+                </div>`;
+            logStream.insertAdjacentHTML('afterbegin', alertEntry);
+        }
+        return;
+    }
+
+    if (!payload.amt) return alert("System Error: No transaction amount detected.");
+
+    try {
+        // 2. FETCH DATA FROM SERVER (PRIMARY ANALYTICS)
+        const response = await fetch('http://127.0.0.1:5001/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        
+        if (!response.ok) throw new Error("Network response was not ok");
+        const result = await response.json();
+
+        // 3. FETCH ML PROOFS (FOR MATRIX AND BASELINE ACCURACY)
+        const proofRes = await fetch('http://127.0.0.1:5001/ml_proofs.json');
+        const proofs = await proofRes.json();
+
+        // 4. UI TRANSITION
+        document.getElementById('idle-view').classList.add('hidden');
+        document.querySelectorAll('.results').forEach(el => el.classList.remove('hidden'));
+
+        // 5. UPDATE PERFORMANCE CHART
+        try {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            if (window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score'],
+                    datasets: [{
+                        data: [
+                            (proofs.validation_accuracy * 100).toFixed(2),
+                            result.precision,
+                            (proofs.recall * 100).toFixed(2),
+                            (proofs.f1 * 100).toFixed(2)
+                        ],
+                        backgroundColor: ['rgba(0,242,255,0.8)', 'rgba(0,255,163,0.8)', 'rgba(255,184,0,0.8)', 'rgba(255,45,85,0.8)'],
+                        borderRadius: 12
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } },
+                    animation: { duration: 1800, easing: 'easeOutCubic' }
+                }
+            });
+        } catch (chartErr) { console.warn("Chart Error:", chartErr); }
+
+        // 6. UPDATE RISK SCORE AND STATUS
+        const statusColor = result.risk_score > 70 ? "var(--danger)" : result.risk_score > 35 ? "var(--warning)" : "var(--success)";
+        const scoreEl = document.getElementById('risk-score');
+        const statusEl = document.getElementById('risk-status');
+        
+        scoreEl.innerText = result.risk_score.toString().padStart(2, '0');
+        scoreEl.style.color = statusColor;
+        statusEl.innerText = result.status.toUpperCase();
+        statusEl.style.color = statusColor;
+        const siren = document.getElementById("siren-audio");
+
+if (result.risk_score > 80) {
+    siren.currentTime = 0;
+    siren.play();
+} else {
+    siren.pause();
+    siren.currentTime = 0;
+}
+
+        // 7. UPDATE NEURAL INTEGRITY (CIRCLES)
+        document.getElementById('acc-score').innerText = result.precision + "%";
+        document.getElementById('confidence-val').innerText = result.confidence + "%";
+        document.querySelector('.precision-circle').style.background = `conic-gradient(var(--accent) ${result.precision}%, rgba(255,255,255,0.05) ${result.precision}%)`;
+        document.querySelector('.confidence-circle').style.background = `conic-gradient(var(--accent) ${result.confidence}%, rgba(255,255,255,0.05) ${result.confidence}%)`;
+
+        // 8. UPDATE HISTORICAL INTEL TABLE
+        const history = result.history_context || { avg: 0, total_scans: 0 };
+        document.getElementById('intel-body').innerHTML = `
+            <tr>
+                <td style="color:var(--accent)">${payload.acc}</td>
+                <td>₹${history.avg}</td>
+                <td style="color:var(--success)">${(99 - (result.risk_score / 2)).toFixed(1)}%</td>
+                <td>${payload.origin}</td>
+            </tr>`;
+
+        // 9. UPDATE GEOSPATIAL TRACE
+        try {
+            markerGroup.clearLayers();
+            const homeNode = [19.0760, 72.8777]; // Mumbai
+            const targetLat = parseFloat(selectedCountry.getAttribute('data-lat'));
+            const targetLng = parseFloat(selectedCountry.getAttribute('data-lng'));
+            const currentLoc = [targetLat, targetLng];
+
+            L.circleMarker(homeNode, { color: 'var(--success)', radius: 5 }).addTo(markerGroup);
+            L.marker(currentLoc).addTo(markerGroup).bindPopup(`Origin: ${payload.origin}`).openPopup();
+            
+            const pathLine = L.polyline([homeNode, currentLoc], { 
+                color: statusColor, weight: 4, dashArray: '10, 10', opacity: 1.0, lineJoin: 'round' 
+            }).addTo(markerGroup);
+            
+            map.fitBounds(pathLine.getBounds(), { padding: [50, 50] });
+            setTimeout(() => map.invalidateSize(), 300);
+        } catch (mapErr) { console.warn("Map Error:", mapErr); }
+
+        // 10. UPDATE CONFUSION MATRIX & AUDIT LOGIC
+        renderConfusionMatrix(proofs.confusion_matrix);
+        
+        const auditBox = document.getElementById('audit-container');
+        const amtVarColor = payload.amt > (history.avg * 2) ? "var(--danger)" : "var(--accent)";
+        const distStatus = payload.dist > 500 ? "GEOSPATIAL_ANOMALY" : "LOCAL_NODE_VERIFIED";
+        
+        auditBox.innerHTML = `
+            <div class="audit-item" style="border-left-color: ${amtVarColor}">
+                <div class="audit-category" style="color: ${amtVarColor}">AMT_VARIANCE</div>
+                <div class="audit-desc">Neural Layer 1 detected ₹${payload.amt}. Baseline is ₹${history.avg}. Deviation: ${((payload.amt / (history.avg || 1)) * 100).toFixed(0)}%.</div>
+            </div>
+            <div class="audit-item" style="border-left-color: var(--accent)">
+                <div class="audit-category" style="color: var(--accent)">${distStatus}</div>
+                <div class="audit-desc">Layer 2 verified origin at ${payload.dist}km. ${payload.dist > 500 ? "High-latency breach." : "Trusted geofence."}</div>
+            </div>
+            <div class="audit-item" style="border-left-color: var(--accent)">
+                <div class="audit-category" style="color: var(--accent)">CONFIDENCE_SCORE</div>
+                <div class="audit-desc">RF Classifier processed vectors with ${result.confidence}% certainty.</div>
+            </div>`;
+
+        // 11. UPDATE LOG STREAM
+        const logStream = document.getElementById('log-stream');
+        if (logStream) {
+            if (logStream.innerText.includes("Awaiting")) logStream.innerHTML = '';
+            const traceId = 'trace-' + Date.now();
+            logStream.insertAdjacentHTML('afterbegin', `
+                <div class="log-entry" id="${traceId}">
+                    <div class="log-meta"><span>TRACE_ID: ${traceId.toUpperCase()}</span><span>${getTime()}</span></div>
+                    <div class="log-data">
+                        <span style="color: var(--accent)">ACC: ${payload.acc}</span>
+                        <span style="color: ${statusColor}">₹${payload.amt}</span>
+                        <span class="status-tag" style="background: ${statusColor}; color: #000">${result.status}</span>
+                    </div>
+                </div>`);
+        }
+
+    } catch (err) {
+        console.error("Critical System Error:", err);
+        // Only trigger the alert if it's a real connection failure
+        if (err.message.includes("fetch") || err.name === "TypeError") {
+            alert("LINK FAILED: Check if app.py is running on port 5001.");
+        }
+    }
+}
+
+        function blockTrace(elementId, accountId) {
+            if (confirm(`Confirm permanent neural blacklist for ${accountId}?`)) {
+                blacklist.add(accountId);
+                document.getElementById('blacklist-view').innerHTML = Array.from(blacklist).map(a => `<div>• ${a}</div>`).join('');
+
+                const entry = document.getElementById(elementId);
+                entry.classList.add('blocked');
+                const tag = entry.querySelector('.status-tag');
+                tag.innerText = "BLOCKED";
+                tag.style.background = "rgba(255,255,255,0.1)";
+                tag.style.color = "#fff";
+            }
+        }
+
+        function createAuditItem(cat, desc, color) {
+            return `<div class="audit-item" style="border-left-color: ${color}">
+                <div class="audit-category" style="color: ${color}">${cat}</div>
+                <div class="audit-desc">${desc}</div>
+            </div>`;
+        }
+        function renderModelProofChart(data) {
+            const ctx = document.getElementById('metricsChart').getContext('2d');
+            if (window.myChart) window.myChart.destroy();
+
+            window.myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score'],
+                    datasets: [{
+                        label: 'Neural Engine Performance',
+                        data: [
+                            (data.validation_accuracy * 100).toFixed(2),
+                            (data.precision * 100).toFixed(2),
+                            (data.recall * 100).toFixed(2),
+                            (data.f1 * 100).toFixed(2)
+                        ],
+                       backgroundColor: [
+    'rgba(168, 255, 120, 0.7)',  // main neon (soft)
+    'rgba(120, 150, 255, 0.6)',  // bluish (muted)
+    'rgba(255, 184, 0, 0.6)',    // amber (soft)
+    'rgba(255, 80, 120, 0.6)'    // red (soft)
+],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+        function renderConfusionMatrix(matrix) {
+            const container = document.getElementById('matrix-grid');
+            if (!container || !matrix) return;
+
+            // Extract values from backend (2x2 matrix)
+            const tn = matrix[0][0];
+            const fp = matrix[0][1];
+            const fn = matrix[1][0];
+            const tp = matrix[1][1];
+
+            // Helper
+            function cell(val, label, color) {
+                return `
+        <div class="matrix-cell" style="border-color:${color}">
+            <div class="value">${val}</div>
+            <div class="label">${label}</div>
+        </div>`;
+            }
+
+            // FULL STRUCTURE
+            container.innerHTML = `
+        <!-- TOP -->
+        <div class="matrix-label top">Pred: Secure</div>
+        <div class="matrix-label top">Pred: Fraud</div>
+
+        <!-- ROW 1 -->
+        ${cell(tn, 'TN', 'var(--success)')}
+        ${cell(fp, 'FP', 'var(--danger)')}
+
+        <!-- ROW 2 -->
+        ${cell(fn, 'FN', 'var(--warning)')}
+        ${cell(tp, 'TP', 'var(--success)')}
+
+        <!-- BOTTOM -->
+        <div class="matrix-label bottom">Actual Secure</div>
+        <div class="matrix-label bottom">Actual Fraud</div>
+    `;
+        }
+        // 🔥 FULL STRUCTURE (Pred top, Actual bottom)
+        container.innerHTML = `
+        <!-- TOP LABELS -->
+        <div class="matrix-label top">Pred: Secure</div>
+        <div class="matrix-label top">Pred: Fraud</div>
+
+        <!-- ROW 1 -->
+        ${createCell(tn, 'TN', 'var(--success)')}
+        ${createCell(fp, 'FP', 'var(--danger)')}
+
+        <!-- ROW 2 -->
+        ${createCell(fn, 'FN', 'var(--warning)')}
+        ${createCell(tp, 'TP', 'var(--success)')}
+
+        <!-- BOTTOM LABELS -->
+        <div class="matrix-label bottom">Actual Secure</div>
+        <div class="matrix-label bottom">Actual Fraud</div>
+    `;
+
+    </script>
+    <script>
+        let precision = 82;
+        let confidence = 67;
+
+        document.querySelector('.precision-circle').style.background =
+            `conic-gradient(var(--accent) ${precision}%, rgba(255,255,255,0.05) ${precision}%)`;
+
+        document.querySelector('.confidence-circle').style.background =
+            `conic-gradient(var(--accent) ${confidence}%, rgba(255,255,255,0.05) ${confidence}%)`;
+    </script>
+</body>
+
+</html>
