@@ -1,9 +1,10 @@
 # Fraudulent-Online-Transaction-Detection-System
+---
 This Fraud Detection System uses Random Forest to classify transactions as genuine or fraudulent based on amount, frequency, and location. Built with Python and Flask, it provides a web interface for instant predictions.
 # Fraudulent Online Transaction Detection System
 
 A Machine Learning based web application that detects whether an online transaction is **Fraudulent** or **Legitimate** using transaction details such as amount, transaction velocity, and location.
-
+---
 ## Features
 
 * Real-time fraud prediction
